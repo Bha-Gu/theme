@@ -12,39 +12,51 @@ night_image = Image("Night.png");
 vender = Image("logo");
 logo = Sprite(vender);
 logo.SetX(Window.GetWidth()/ 2 - vender.GetWidth()/ 2);
-logo.SetY(Window.GetHeight()/ 2 - vender.GetHeight()/ 2);
+logo.SetY(Window.GetHeight()/ 2 - vender.GetHeight());
 logo.SetZ(0);
 
 sprite = Sprite();
 sprite.SetZ(1);
 
 # Image animation loop
-for (i = 1; i < 31; i++)
-  flyingman_image[i] = Image("throbber-" + i + ".png");
+
+flyingman_image[i] = Image("throbber.png");
 flyingman_sprite = Sprite();
+ps = Sprite();
+
+
+
 
 flyingman_sprite.SetX(Window.GetWidth() / 2 - flyingman_image[1].GetWidth() / 2); # Place in the centre
-flyingman_sprite.SetY(Window.GetHeight() - flyingman_image[1].GetHeight());
+flyingman_sprite.SetY(Window.GetHeight() * 0.85 - flyingman_image[1].GetHeight());
+
+ps.SetX(Window.GetWidth() / 2 - flyingman_image[1].GetWidth() / 2); # Place in the centre
+ps.SetY(Window.GetHeight() - flyingman_image[1].GetHeight());
+
+if (Plymouth.GetMode() == "boot" || Plymouth.GetMode() == "resume"){
+		sprite.SetX(Window.GetWidth()/ 2 - morning_image.GetWidth()/ 2);
+		sprite.SetY(Window.GetHeight()/ 2);
+		sprite.SetImage(morning_image);
+	}else {
+		sprite.SetX(Window.GetWidth()/ 2 - night_image.GetWidth()/ 2);
+		sprite.SetY(Window.GetHeight()/ 2);
+		sprite.SetImage(night_image);
+	}
+
+
 
 
 count = 1;
 
 fun refresh_callback(){
-	if (Plymouth.GetMode() == "boot" || Plymouth.GetMode() == "resume"){
-		sprite.SetX(Window.GetWidth()/ 2 - morning_image.GetWidth()/ 2);
-		sprite.SetY(Window.GetHeight()/ 2 - morning_image.GetHeight()/ 2);
-		sprite.SetImage(morning_image);
-	}else {
-		sprite.SetX(Window.GetWidth()/ 2 - night_image.GetWidth()/ 2);
-		sprite.SetY(Window.GetHeight()/ 2 - night_image.GetHeight()/ 2);
-		sprite.SetImage(night_image);
-	}
-
-	flyingman_sprite.SetImage(flyingman_image[count]);
+	flyingman_sprite.SetImage(flyingman_image[1].Rotate(Math.Pi*count/25));
 	count++;
-	if (count == 31) {
-		count = 1;
-	}
+}
+
+fun progress_callback(time, progress){	
+		ps.SetImage(flyingman_image[1].Rotate(2*Math.Pi*progress));
 }
 
 Plymouth.SetRefreshFunction (refresh_callback);
+
+Plymouth.SetBootProgressFunction(progress_callback);
