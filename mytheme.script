@@ -1,7 +1,7 @@
 #Background gradiant--------------------------------------------------------------------
 
-Window.SetBackgroundTopColor(0, 0, 0);
-Window.SetBackgroundBottomColor(0, 0, 0);
+#Window.SetBackgroundTopColor(0, 0, 0);
+#Window.SetBackgroundBottomColor(0, 0, 0);
 
 #Constants--------------------------------------------------------------------
 
@@ -9,34 +9,28 @@ Window.X = Window.GetX();
 Window.Y = Window.GetY();
 Window.Width = Window.GetWidth();
 Window.Height = Window.GetHeight();
+throbber.speed = 1;  					#In Rotations per Second
+progress_bar.SizeX = 0.15;  			#percentage of screen width
+progress_bar.SizeY = 1; 				#height multiplier to 8 pixel
 time.consumed = 0;
+
+
 
 #Throbber--------------------------------------------------------------------
 
 throbber.image = Image("throbber.png").Scale(Window.Height / 24, Window.Height / 24);
 throbber.sprite = Sprite();
-throbber.speed = 1;
 throbber.sprite.SetX(Window.X + Window.Width / 2 - throbber.image.GetWidth() / 2); 
 throbber.sprite.SetY(Window.Y + Window.Height * 0.85 - throbber.image.GetHeight());
 
 
 #Logo--------------------------------------------------------------------
 
-logo.image = Image("logo");
+logo.image = Image("../../../../../sys/firmware/acpi/bgrt/image");
 logo.sprite = Sprite(logo.image);
 logo.sprite.SetX(Window.X + Window.Width / 2 - logo.image.GetWidth() / 2);
-logo.sprite.SetY(Window.Y + Window.Height / 2 - logo.image.GetHeight());
+logo.sprite.SetY(Window.Y + Window.Height * 0.382 - logo.image.GetHeight() / 2);   #Center vertically allined at Goldem ratio
 logo.sprite.SetZ(0);
-
-
-#Boot Mode-------------------------Debugging-------------------------------------------
-
-
-boot.image = Image.Text(Plymouth.GetMode(), 1, 0, 0, 1, "Fixed", "Center");
-boot.sprite = Sprite();
-boot.sprite.SetX(Window.X + Window.Width / 2 - boot.image.GetWidth() / 2);
-boot.sprite.SetY(Window.Y);
-boot.sprite.SetImage(boot.image);
 
 
 #Greetings--------------------------------------------------------------------
@@ -69,7 +63,7 @@ else if (Plymouth.GetMode() == "reboot")
 		greet.sprite.SetY(Window.Y + Window.Height / 2);
 		greet.sprite.SetImage(jai.image);		
 	}
-else if (Plymouth.GetMode() == "updates") 
+else if (Plymouth.GetMode() == "updates" || Plymouth.GetMode() == "system-upgrade" || Plymouth.GetMode() == "firmware-upgrade") 
 	{
 		greet.sprite.SetX(Window.X + Window.Width / 2 - day.image.GetWidth() / 2);
 		greet.sprite.SetY(Window.Y + Window.Height / 2);
@@ -77,47 +71,50 @@ else if (Plymouth.GetMode() == "updates")
 	}
 else
 	{
-		greet.image = Image.Text(Plymouth.GetMode(), 1, 0, 0, 1, "Fixed", "Center");
+		greet.image = Image.Text("Best of Luck", 1, 0, 0, 1, "Fixed", "Center");
 		greet.sprite.SetX(Window.X + Window.Width / 2 - greet.image.GetWidth() / 2);
 		greet.sprite.SetY(Window.Y + Window.Height / 2);
 		greet.sprite.SetImage(greet.image);	
 	}
 
-fun refress_callback(){
-	boot.sprite.SetImage(boot.image);
-}
-
-
-
-Plymouth.SetRefressFunction(refress_callback);
 #Progress Bar--------------------------------------------------------------------
 
-progress_box.image = Image("progress_box.png").Scale(Window.Width * 0.15, Window.Height / 96);
-progress_box.sprite = Sprite(progress_box.image);
+progress_box.image = Image("progress_box.png").Scale(Window.Width * progress_bar.SizeX, 8 * progress_bar.SizeY);
+progress_box.sprite = Sprite();
 
-progress_box.x = Window.X + Window.Width / 2 - progress_box.image.GetWidth() / 2;
-progress_box.y = Window.Y + Window.Height * 0.75 - progress_box.image.GetHeight() / 2;
-progress_box.sprite.SetPosition(progress_box.x, progress_box.y, 0);
+progress_box.sprite.SetX(Window.X + Window.Width / 2 - progress_box.image.GetWidth() / 2);
+progress_box.sprite.SetY(Window.Y + Window.Height * 0.75 - progress_box.image.GetHeight() / 2);
+progress_box.sprite.SetZ(0);
+progress_box.sprite.SetImage(progress_box.image);
 
-progress_bar.original_image = Image("progress_bar.png").Scale(progress_box.image.GetWidth() - 2, Window.Height / 128);
+progress_bar.original_image = Image("progress_bar.png").Scale(progress_box.image.GetWidth() - (2 * progress_bar.SizeY), 6 * progress_bar.SizeY);
 progress_bar.sprite = Sprite();
 
-progress_bar.x = Window.X + Window.Width  / 2 - progress_bar.original_image.GetWidth() / 2;
-progress_bar.y = Window.Y + Window.Height * 0.75  - progress_box.image.GetHeight() / 2 + (progress_box.image.GetHeight() - progress_bar.original_image.GetHeight()) / 2;
-progress_bar.sprite.SetPosition(progress_bar.x, progress_bar.y, 1);
+progress_bar.sprite.SetX(Window.X + Window.Width / 2 - progress_bar.original_image.GetWidth() / 2);
+progress_bar.sprite.SetY(Window.Y + Window.Height * 0.75  - progress_box.image.GetHeight() / 2 + (progress_box.image.GetHeight() - progress_bar.original_image.GetHeight()) / 2);
+progress_bar.sprite.SetZ(1);
 
 
 #Progress Based Update--------------------------------------------------------------------
 
 fun progress_callback(time, progress)
 {
-		throbber.sprite.SetImage(throbber.image.Rotate(2*Math.Pi*time*throbber.speed));
+		throbber.sprite.SetImage(throbber.image.Rotate(2 * Math.Pi * time * throbber.speed));
 		progress_bar.image = progress_bar.original_image.Scale(progress_bar.original_image.GetWidth() * progress, progress_bar.original_image.GetHeight());
 		progress_bar.sprite.SetImage (progress_bar.image);
 		time.consumed = time;
 }
 
 Plymouth.SetBootProgressFunction(progress_callback);
+
+fun system_update_callback(progress)
+{
+		progress_bar.image = progress_bar.original_image.Scale(progress_bar.original_image.GetWidth() * progress, progress_bar.original_image.GetHeight());
+		progress_bar.sprite.SetImage (progress_bar.image);
+}
+
+Plymouth.SetSystemUpdateFunction(system_update_callback);
+
 
 #Status Update Message--------------------------------------------------------------------
 
@@ -127,7 +124,7 @@ fun ustatus(stat)
 	status.image = Image.Text(stat, 1, 1, 1, 1, "Fixed", "center");
 	status.sprite = Sprite(status.image);
 	status.sprite.SetX(Window.X + Window.Width / 2 - status.image.GetWidth() / 2);
-	status.sprite.SetY(Window.Y + Window.Height - status.image.GetHeight());
+	status.sprite.SetY(Window.Y + Window.Height - status.image.GetHeight() - 10);
 }
 
 Plymouth.SetUpdateStatusFunction(ustatus);
