@@ -12,14 +12,6 @@ to the directory
 
 You may also remove the LICENCE and README files before installing.
 
-You may make a link the vender logo at 
-
-"/sys/firmware/acpi/bgrt/image"
-
-to 
-
-"/usr/share/plymouth/themes/theme/logo.png"
-
 To install the theme run
 
 sudo plymouth-set-default-theme -R theme
