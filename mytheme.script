@@ -1,63 +1,256 @@
- # Nice colour on top of the screen fading to
-Window.SetBackgroundTopColor (0.0, 0.00, 0.0);
+#Background gradiant--------------------------------------------------------------------
 
-# an equally nice colour on the bottom
-Window.SetBackgroundBottomColor (0.0, 0.00, 0.0);
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
 
-Window_Width = Window.GetWidth();
-Window_Height = Window.GetHeight();
+#Constants--------------------------------------------------------------------
 
-morning_image = Image("Morning.png");
-night_image = Image("Night.png");
+Window.X = Window.GetX();
+Window.Y = Window.GetY();
+Window.Width = Window.GetWidth();
+Window.Height = Window.GetHeight();
+time.consumed = 0;
 
-vender = Image("logo");
-logo = Sprite(vender);
-logo.SetX(Window_Width/ 2 - vender.GetWidth()/ 2);
-logo.SetY(Window_Height/ 2 - vender.GetHeight());
-logo.SetZ(0);
+#Throbber--------------------------------------------------------------------
 
-sprite = Sprite();
-sprite.SetZ(1);
+throbber.image = Image("throbber.png").Scale(Window.Height / 24, Window.Height / 24);
+throbber.sprite = Sprite();
+throbber.speed = 1;
+throbber.sprite.SetX(Window.X + Window.Width / 2 - throbber.image.GetWidth() / 2); 
+throbber.sprite.SetY(Window.Y + Window.Height * 0.85 - throbber.image.GetHeight());
 
-flyingman_image = Image("throbber.png");
-flyingman_sprite = Sprite();
-ps = Sprite();
 
-flyingman_sprite.SetX(Window_Width / 2 - flyingman_image.GetWidth() / 2); 
-flyingman_sprite.SetY(Window_Height * 0.8 - flyingman_image.GetHeight());
+#Logo--------------------------------------------------------------------
 
-ps.SetX(Window_Width/ 2 - flyingman_image.GetWidth() / 2); 
-ps.SetY(Window_Height * 0.9 - flyingman_image.GetHeight());
+logo.image = Image("logo");
+logo.sprite = Sprite(logo.image);
+logo.sprite.SetX(Window.X + Window.Width / 2 - logo.image.GetWidth() / 2);
+logo.sprite.SetY(Window.Y + Window.Height / 2 - logo.image.GetHeight());
+logo.sprite.SetZ(0);
 
-if (Plymouth.GetMode() == "boot" || Plymouth.GetMode() == "resume"){
-		sprite.SetX(Window_Width/ 2 - morning_image.GetWidth()/ 2);
-		sprite.SetY(Window_Height/ 2);
-		sprite.SetImage(morning_image);
-	}else {
-		sprite.SetX(Window_Width/ 2 - night_image.GetWidth()/ 2);
-		sprite.SetY(Window_Height/ 2);
-		sprite.SetImage(night_image);
+
+#Boot Mode-------------------------Debugging-------------------------------------------
+
+
+boot.image = Image.Text(Plymouth.GetMode(), 1, 0, 0, 1, "Fixed", "Center");
+boot.sprite = Sprite();
+boot.sprite.SetX(Window.X + Window.Width / 2 - boot.image.GetWidth() / 2);
+boot.sprite.SetY(Window.Y);
+boot.sprite.SetImage(boot.image);
+
+
+#Greetings--------------------------------------------------------------------
+
+greet.sprite = Sprite();
+
+morning.image = Image("Morning.png");
+
+night.image = Image("Night.png");
+
+jai.image = Image("Jai.png");
+
+day.image = Image("Day.png");
+
+if (Plymouth.GetMode() == "boot")
+	{
+		greet.sprite.SetX(Window.X + Window.Width / 2 - morning.image.GetWidth() / 2);
+		greet.sprite.SetY(Window.Y + Window.Height / 2);
+		greet.sprite.SetImage(morning.image);
+	}
+else if (Plymouth.GetMode() == "shutdown")
+	{
+		greet.sprite.SetX(Window.X + Window.Width / 2 - night.image.GetWidth() / 2);
+		greet.sprite.SetY(Window.Y + Window.Height / 2);
+		greet.sprite.SetImage(night.image);
+	}
+else if (Plymouth.GetMode() == "reboot")
+	{
+		greet.sprite.SetX(Window.X + Window.Width / 2 - jai.image.GetWidth() / 2);
+		greet.sprite.SetY(Window.Y + Window.Height / 2);
+		greet.sprite.SetImage(jai.image);		
+	}
+else if (Plymouth.GetMode() == "updates") 
+	{
+		greet.sprite.SetX(Window.X + Window.Width / 2 - day.image.GetWidth() / 2);
+		greet.sprite.SetY(Window.Y + Window.Height / 2);
+		greet.sprite.SetImage(day.image);
+	}
+else
+	{
+		greet.image = Image.Text(Plymouth.GetMode(), 1, 0, 0, 1, "Fixed", "Center");
+		greet.sprite.SetX(Window.X + Window.Width / 2 - greet.image.GetWidth() / 2);
+		greet.sprite.SetY(Window.Y + Window.Height / 2);
+		greet.sprite.SetImage(greet.image);	
 	}
 
-freq = 1;
-fun progress_callback(time, progress){	
-		ps.SetImage(flyingman_image.Rotate(2*Math.Pi*progress));
-		flyingman_sprite.SetImage(flyingman_image.Rotate(2*Math.Pi*time*freq));
+fun refress_callback(){
+	boot.sprite.SetImage(boot.image);
 }
 
-bs = Sprite();
 
-fun ustatus(stat){
-	status = Image.Text (stat, 1,1,1,1,"Fixed","center");
-	bs.SetImage(status);
-	bs.SetX(Window_Width/2 - status.GetWidth()/2);
-	bs.SetY(Window_Height - status.GetHeight());
+
+Plymouth.SetRefressFunction(refress_callback);
+#Progress Bar--------------------------------------------------------------------
+
+progress_box.image = Image("progress_box.png").Scale(Window.Width * 0.15, Window.Height / 96);
+progress_box.sprite = Sprite(progress_box.image);
+
+progress_box.x = Window.X + Window.Width / 2 - progress_box.image.GetWidth() / 2;
+progress_box.y = Window.Y + Window.Height * 0.75 - progress_box.image.GetHeight() / 2;
+progress_box.sprite.SetPosition(progress_box.x, progress_box.y, 0);
+
+progress_bar.original_image = Image("progress_bar.png").Scale(progress_box.image.GetWidth() - 2, Window.Height / 128);
+progress_bar.sprite = Sprite();
+
+progress_bar.x = Window.X + Window.Width  / 2 - progress_bar.original_image.GetWidth() / 2;
+progress_bar.y = Window.Y + Window.Height * 0.75  - progress_box.image.GetHeight() / 2 + (progress_box.image.GetHeight() - progress_bar.original_image.GetHeight()) / 2;
+progress_bar.sprite.SetPosition(progress_bar.x, progress_bar.y, 1);
+
+
+#Progress Based Update--------------------------------------------------------------------
+
+fun progress_callback(time, progress)
+{
+		throbber.sprite.SetImage(throbber.image.Rotate(2*Math.Pi*time*throbber.speed));
+		progress_bar.image = progress_bar.original_image.Scale(progress_bar.original_image.GetWidth() * progress, progress_bar.original_image.GetHeight());
+		progress_bar.sprite.SetImage (progress_bar.image);
+		time.consumed = time;
+}
+
+Plymouth.SetBootProgressFunction(progress_callback);
+
+#Status Update Message--------------------------------------------------------------------
+
+
+fun ustatus(stat)
+{
+	status.image = Image.Text(stat, 1, 1, 1, 1, "Fixed", "center");
+	status.sprite = Sprite(status.image);
+	status.sprite.SetX(Window.X + Window.Width / 2 - status.image.GetWidth() / 2);
+	status.sprite.SetY(Window.Y + Window.Height - status.image.GetHeight());
 }
 
 Plymouth.SetUpdateStatusFunction(ustatus);
 
-//Plymouth.SetRefreshFunction (refresh_callback);
+#----------------------------------------- Dialogue --------------------------------
 
-Plymouth.SetBootProgressFunction(progress_callback);
+status = "normal";
+
+fun dialog_setup()
+  {
+    local.box;
+    local.lock;
+    local.entry;
+    
+    box.image = Image("box.png");
+    lock.image = Image("lock.png");
+    entry.image = Image("entry.png");
+    
+    box.sprite = Sprite(box.image);
+    box.x = Window.GetX() + Window.GetWidth()  / 2 - box.image.GetWidth ()/2;
+    box.y = Window.GetY() + Window.GetHeight() / 2 - box.image.GetHeight()/2;
+    box.z = 10000;
+    box.sprite.SetPosition(box.x, box.y, box.z);
+    
+    lock.sprite = Sprite(lock.image);
+    lock.x = box.x + box.image.GetWidth()/2 - (lock.image.GetWidth() + entry.image.GetWidth()) / 2;
+    lock.y = box.y + box.image.GetHeight()/2 - lock.image.GetHeight()/2;
+    lock.z = box.z + 1;
+    lock.sprite.SetPosition(lock.x, lock.y, lock.z);
+    
+    entry.sprite = Sprite(entry.image);
+    entry.x = lock.x + lock.image.GetWidth();
+    entry.y = box.y + box.image.GetHeight()/2 - entry.image.GetHeight()/2;
+    entry.z = box.z + 1;
+    entry.sprite.SetPosition(entry.x, entry.y, entry.z);
+    
+    global.dialog.box = box;
+    global.dialog.lock = lock;
+    global.dialog.entry = entry;
+    global.dialog.bullet_image = Image("bullet.png");
+    dialog_opacity (1);
+  }
+    
+fun dialog_opacity(opacity)
+  {
+    dialog.box.sprite.SetOpacity (opacity);
+    dialog.lock.sprite.SetOpacity (opacity);
+    dialog.entry.sprite.SetOpacity (opacity);
+    for (index = 0; dialog.bullet[index]; index++)
+      {
+        dialog.bullet[index].sprite.SetOpacity(opacity);
+      }
+  }
+
+fun display_normal_callback ()
+  {
+    global.status = "normal";
+    if (global.dialog)
+      dialog_opacity (0);
+  }
+
+fun display_password_callback (prompt, bullets)
+  {
+    global.status = "password";
+    if (!global.dialog)
+	dialog_setup();
+    else
+	dialog_opacity(1);
+    for (index = 0; dialog.bullet[index] || index < bullets; index++)
+      {
+        if (!dialog.bullet[index])
+          {
+            dialog.bullet[index].sprite = Sprite(dialog.bullet_image);
+            dialog.bullet[index].x = dialog.entry.x + index * dialog.bullet_image.GetWidth();
+            dialog.bullet[index].y = dialog.entry.y + dialog.entry.image.GetHeight() / 2 - dialog.bullet_image.GetHeight() / 2;
+            dialog.bullet[index].z = dialog.entry.z + 1;
+            dialog.bullet[index].sprite.SetPosition(dialog.bullet[index].x, dialog.bullet[index].y, dialog.bullet[index].z);
+          }
+        if (index < bullets)
+          dialog.bullet[index].sprite.SetOpacity(1);
+        else
+          dialog.bullet[index].sprite.SetOpacity(0);
+      }
+  }
+
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+
+#----------------------------------------- Message --------------------------------
+
+message.sprite = Sprite();
+message.sprite.SetPosition(10, 10, 10000);
+
+fun display_message_callback (text)
+{
+  message.image = Image.Text(text, 1, 1, 1);
+  message.sprite.SetX(Window.X + Window.Width / 2 - message.image.GetWidth() / 2);
+  message.sprite.SetImage(my_image);
+}
+
+fun hide_message_callback (text)
+{
+  message_sprite = Sprite();
+  message_sprite.SetPosition(10, 10, 10000);
+}
+
+Plymouth.SetDisplayMessageFunction (display_message_callback);
+Plymouth.SetHideMessageFunction (hide_message_callback);
 
 
+#----------------------------------------- Quit --------------------------------
+
+fun quit_callback ()
+{
+	progress_bar.image = progress_bar.original_image.Scale(progress_bar.original_image.GetWidth(), progress_bar.original_image.GetHeight());
+	progress_bar.sprite.SetImage (progress_bar.image);
+	for (i = 0; i < 10; i++)
+	{
+		throbber.sprite.SetImage(throbber.image.Rotate(2*Math.Pi*time.consumed*throbber.speed));
+		throbber.sprite.SetOpacity(1 - i / 10);
+		time.consumed += 1; 	
+	}
+	throbber.sprite.SetOpacity(0);
+}
+
+Plymouth.SetQuitFunction(quit_callback);
